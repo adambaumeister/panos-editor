@@ -1,0 +1,839 @@
+<?xml version="1.0"?>
+<config version="9.0.0" urldb="paloaltonetworks">
+  <mgt-config>
+    <devices>
+      <entry name="6407C044071F6BE"/>
+      <entry name="61676609E66FE5A"/>
+      <entry name="6F8D2CDF3EFA00E"/>
+    </devices>
+    <users>
+      <entry name="admin">
+        <phash>*</phash>
+        <permissions>
+          <role-based>
+            <superuser>yes</superuser>
+          </role-based>
+        </permissions>
+      </entry>
+      <entry name="panadmin">
+        <phash>$1$byiponxx$a43/8a8juG8v90GQKYw6T.</phash>
+        <permissions>
+          <role-based>
+            <superuser>yes</superuser>
+          </role-based>
+        </permissions>
+      </entry>
+    </users>
+    <password-complexity>
+      <enabled>yes</enabled>
+      <minimum-length>8</minimum-length>
+    </password-complexity>
+  </mgt-config>
+  <shared>
+    <log-settings>
+      <profiles>
+        <entry name="forward_panorama">
+          <enhanced-application-logging>yes</enhanced-application-logging>
+          <match-list>
+            <entry name="traffic">
+              <log-type>traffic</log-type>
+              <filter>All Logs</filter>
+              <send-to-panorama>yes</send-to-panorama>
+            </entry>
+            <entry name="threat">
+              <log-type>threat</log-type>
+              <filter>All Logs</filter>
+              <send-to-panorama>yes</send-to-panorama>
+            </entry>
+            <entry name="auth">
+              <log-type>auth</log-type>
+              <filter>All Logs</filter>
+              <send-to-panorama>no</send-to-panorama>
+            </entry>
+            <entry name="wildfire">
+              <log-type>wildfire</log-type>
+              <filter>All Logs</filter>
+              <send-to-panorama>no</send-to-panorama>
+            </entry>
+            <entry name="url">
+              <log-type>url</log-type>
+              <filter>All Logs</filter>
+              <send-to-panorama>yes</send-to-panorama>
+            </entry>
+          </match-list>
+        </entry>
+      </profiles>
+    </log-settings>
+    <post-rulebase>
+      <default-security-rules>
+        <rules>
+          <entry name="intrazone-default" uuid="ddc69f82-04a3-4965-9068-f551cd6185e4">
+            <action>allow</action>
+            <log-start>no</log-start>
+            <log-end>yes</log-end>
+            <log-setting>forward_panorama</log-setting>
+          </entry>
+          <entry name="interzone-default" uuid="4b94cf10-138d-4862-8c96-c1dffd4aeafd">
+            <action>deny</action>
+            <log-start>no</log-start>
+            <log-end>yes</log-end>
+            <log-setting>forward_panorama</log-setting>
+          </entry>
+        </rules>
+      </default-security-rules>
+    </post-rulebase>
+    <address>
+      <entry name="testhost_10.100.100.10">
+        <ip-netmask>10.100.100.10</ip-netmask>
+        <description>The Ubuntu test host.</description>
+        <tag>
+          <member>DEMO-STATIC</member>
+        </tag>
+      </entry>
+      <entry name="testhost_public_ip_DYNAMIC">
+        <ip-netmask>20.213.243.31</ip-netmask>
+        <description>Dynamic address of public test host, will change per deployment.</description>
+        <tag>
+          <member>DEMO-DYNAMIC</member>
+        </tag>
+      </entry>
+    </address>
+    <tag>
+      <entry name="TEST-HOSTS">
+        <color>color15</color>
+      </entry>
+      <entry name="DEMO-STATIC">
+        <comments>Objects that don't change per deployment</comments>
+        <color>color17</color>
+      </entry>
+      <entry name="DEMO-DYNAMIC">
+        <comments>Objects that will change values between deployments</comments>
+        <color>color1</color>
+      </entry>
+    </tag>
+  </shared>
+  <devices>
+    <entry name="localhost.localdomain">
+      <deviceconfig>
+        <system>
+          <update-server>updates.paloaltonetworks.com</update-server>
+          <update-schedule>
+            <threats>
+              <recurring>
+                <weekly>
+                  <day-of-week>wednesday</day-of-week>
+                  <at>01:02</at>
+                  <action>download-only</action>
+                </weekly>
+              </recurring>
+            </threats>
+          </update-schedule>
+          <timezone>Australia/ACT</timezone>
+          <service>
+            <disable-telnet>yes</disable-telnet>
+            <disable-http>yes</disable-http>
+          </service>
+          <type>
+            <dhcp-client>
+              <send-hostname>yes</send-hostname>
+              <send-client-id>no</send-client-id>
+              <accept-dhcp-hostname>no</accept-dhcp-hostname>
+              <accept-dhcp-domain>no</accept-dhcp-domain>
+            </dhcp-client>
+          </type>
+          <hostname>pan-xsoar-demo</hostname>
+        </system>
+        <setting>
+          <management>
+            <storage-partition>
+              <internal/>
+            </storage-partition>
+            <hostname-type-in-syslog>FQDN</hostname-type-in-syslog>
+            <initcfg>
+              <type>
+                <dhcp-client>
+                  <send-hostname>yes</send-hostname>
+                  <send-client-id>no</send-client-id>
+                  <accept-dhcp-hostname>no</accept-dhcp-hostname>
+                  <accept-dhcp-domain>no</accept-dhcp-domain>
+                </dhcp-client>
+              </type>
+              <hostname>hostname</hostname>
+              <username>panadmin</username>
+            </initcfg>
+          </management>
+        </setting>
+      </deviceconfig>
+      <device-group>
+        <entry name="INBOUND">
+          <description>Firewalls servicing INBOUND traffic into the Azure network.</description>
+          <devices>
+            <entry name="6407C044071F6BE"/>
+          </devices>
+          <post-rulebase>
+            <security>
+              <rules>
+                <entry name="TESTHOST-SSH" uuid="43388f48-d495-4dc8-97d0-74637b56b4f5">
+                  <from>
+                    <member>PUBLIC</member>
+                  </from>
+                  <to>
+                    <member>PRIVATE</member>
+                  </to>
+                  <source>
+                    <member>any</member>
+                  </source>
+                  <source-user>
+                    <member>any</member>
+                  </source-user>
+                  <hip-profiles>
+                    <member>any</member>
+                  </hip-profiles>
+                  <destination>
+                    <member>testhost_public_ip_DYNAMIC</member>
+                  </destination>
+                  <application>
+                    <member>ssh</member>
+                  </application>
+                  <service>
+                    <member>application-default</member>
+                  </service>
+                  <category>
+                    <member>any</member>
+                  </category>
+                  <action>allow</action>
+                  <log-setting>forward_panorama</log-setting>
+                  <log-end>yes</log-end>
+                  <description>Allow Inbound SSH to test host</description>
+                  <tag>
+                    <member>TEST-HOSTS</member>
+                  </tag>
+                  <target>
+                    <negate>no</negate>
+                  </target>
+                </entry>
+              </rules>
+            </security>
+            <nat>
+              <rules>
+                <entry name="TEST-HOST-NAT" uuid="5ade5145-45c0-48ad-af43-8ce802de00af">
+                  <destination-translation>
+                    <translated-address>testhost_10.100.100.10</translated-address>
+                  </destination-translation>
+                  <target>
+                    <negate>no</negate>
+                  </target>
+                  <to>
+                    <member>PUBLIC</member>
+                  </to>
+                  <from>
+                    <member>PUBLIC</member>
+                  </from>
+                  <source>
+                    <member>any</member>
+                  </source>
+                  <destination>
+                    <member>testhost_public_ip_DYNAMIC</member>
+                  </destination>
+                  <service>any</service>
+                  <description>Incoming nat for the test linux host</description>
+                  <tag>
+                    <member>TEST-HOSTS</member>
+                  </tag>
+                  <source-translation>
+                    <dynamic-ip-and-port>
+                      <interface-address>
+                        <interface>ethernet1/1</interface>
+                      </interface-address>
+                    </dynamic-ip-and-port>
+                  </source-translation>
+                </entry>
+              </rules>
+            </nat>
+          </post-rulebase>
+        </entry>
+        <entry name="OUTBOUND">
+          <description>Firewall servicing traffic leaving the Azure network</description>
+          <devices>
+            <entry name="61676609E66FE5A">
+              <vsys>
+                <entry name="vsys1"/>
+              </vsys>
+            </entry>
+            <entry name="6F8D2CDF3EFA00E">
+              <vsys>
+                <entry name="vsys1"/>
+              </vsys>
+            </entry>
+          </devices>
+          <post-rulebase>
+            <nat>
+              <rules>
+                <entry name="OUTBOUND-NAT" uuid="941dce92-245a-42ec-b7a8-b6a5c7151898">
+                  <source-translation>
+                    <dynamic-ip-and-port>
+                      <interface-address>
+                        <interface>ethernet1/1</interface>
+                      </interface-address>
+                    </dynamic-ip-and-port>
+                  </source-translation>
+                  <target>
+                    <negate>no</negate>
+                  </target>
+                  <to>
+                    <member>PUBLIC</member>
+                  </to>
+                  <from>
+                    <member>PRIVATE</member>
+                  </from>
+                  <source>
+                    <member>any</member>
+                  </source>
+                  <destination>
+                    <member>any</member>
+                  </destination>
+                  <service>any</service>
+                  <description>Outbound NAT for all hosts on the internal azure network</description>
+                </entry>
+              </rules>
+            </nat>
+            <security>
+              <rules>
+                <entry name="OUTBOUND" uuid="24fcda30-a252-4025-ae63-d1e0965ced5d">
+                  <from>
+                    <member>PRIVATE</member>
+                  </from>
+                  <to>
+                    <member>PUBLIC</member>
+                  </to>
+                  <source>
+                    <member>any</member>
+                  </source>
+                  <source-user>
+                    <member>any</member>
+                  </source-user>
+                  <hip-profiles>
+                    <member>any</member>
+                  </hip-profiles>
+                  <destination>
+                    <member>any</member>
+                  </destination>
+                  <application>
+                    <member>any</member>
+                  </application>
+                  <service>
+                    <member>application-default</member>
+                  </service>
+                  <category>
+                    <member>any</member>
+                  </category>
+                  <action>allow</action>
+                  <log-setting>forward_panorama</log-setting>
+                  <log-end>yes</log-end>
+                  <description>Allow all outbound traffic.</description>
+                  <target>
+                    <negate>no</negate>
+                  </target>
+                </entry>
+              </rules>
+            </security>
+          </post-rulebase>
+        </entry>
+      </device-group>
+      <template>
+        <entry name="inbound-template">
+          <description>Inbound firewall template</description>
+          <settings>
+            <default-vsys>vsys1</default-vsys>
+          </settings>
+          <config>
+            <devices>
+              <entry name="localhost.localdomain">
+                <vsys>
+                  <entry name="vsys1">
+                    <import>
+                      <network>
+                        <interface>
+                          <member>ethernet1/1</member>
+                          <member>ethernet1/2</member>
+                        </interface>
+                      </network>
+                    </import>
+                    <zone>
+                      <entry name="PRIVATE">
+                        <network>
+                          <layer3>
+                            <member>ethernet1/1</member>
+                          </layer3>
+                          <log-setting>forward_panorama</log-setting>
+                        </network>
+                      </entry>
+                      <entry name="PUBLIC">
+                        <network>
+                          <layer3>
+                            <member>ethernet1/2</member>
+                          </layer3>
+                          <log-setting>forward_panorama</log-setting>
+                        </network>
+                      </entry>
+                    </zone>
+                  </entry>
+                </vsys>
+                <network>
+                  <virtual-router>
+                    <entry name="inbound">
+                      <ecmp>
+                        <algorithm>
+                          <ip-modulo/>
+                        </algorithm>
+                      </ecmp>
+                      <protocol>
+                        <bgp>
+                          <routing-options>
+                            <graceful-restart>
+                              <enable>yes</enable>
+                            </graceful-restart>
+                          </routing-options>
+                          <enable>no</enable>
+                        </bgp>
+                        <rip>
+                          <enable>no</enable>
+                        </rip>
+                        <ospf>
+                          <enable>no</enable>
+                        </ospf>
+                        <ospfv3>
+                          <enable>no</enable>
+                        </ospfv3>
+                      </protocol>
+                      <interface>
+                        <member>ethernet1/1</member>
+                        <member>ethernet1/2</member>
+                      </interface>
+                      <routing-table>
+                        <ip>
+                          <static-route>
+                            <entry name="default_gateway">
+                              <nexthop>
+                                <ip-address>10.110.129.1</ip-address>
+                              </nexthop>
+                              <bfd>
+                                <profile>None</profile>
+                              </bfd>
+                              <path-monitor>
+                                <enable>no</enable>
+                                <failure-condition>any</failure-condition>
+                                <hold-time>2</hold-time>
+                              </path-monitor>
+                              <interface>ethernet1/2</interface>
+                              <metric>10</metric>
+                              <destination>0.0.0.0/0</destination>
+                              <route-table>
+                                <unicast/>
+                              </route-table>
+                            </entry>
+                            <entry name="azure_internal">
+                              <nexthop>
+                                <ip-address>10.110.0.1</ip-address>
+                              </nexthop>
+                              <bfd>
+                                <profile>None</profile>
+                              </bfd>
+                              <path-monitor>
+                                <enable>no</enable>
+                                <failure-condition>any</failure-condition>
+                                <hold-time>2</hold-time>
+                              </path-monitor>
+                              <interface>ethernet1/1</interface>
+                              <metric>10</metric>
+                              <destination>10.0.0.0/8</destination>
+                              <route-table>
+                                <unicast/>
+                              </route-table>
+                            </entry>
+                            <entry name="probe">
+                              <path-monitor>
+                                <enable>no</enable>
+                                <failure-condition>any</failure-condition>
+                                <hold-time>2</hold-time>
+                              </path-monitor>
+                              <nexthop>
+                                <ip-address>10.110.129.1</ip-address>
+                              </nexthop>
+                              <bfd>
+                                <profile>None</profile>
+                              </bfd>
+                              <interface>ethernet1/2</interface>
+                              <metric>10</metric>
+                              <destination>168.63.129.16/32</destination>
+                              <route-table>
+                                <unicast/>
+                              </route-table>
+                            </entry>
+                          </static-route>
+                        </ip>
+                      </routing-table>
+                    </entry>
+                  </virtual-router>
+                  <interface>
+                    <ethernet>
+                      <entry name="ethernet1/1">
+                        <layer3>
+                          <ipv6>
+                            <neighbor-discovery>
+                              <router-advertisement>
+                                <enable>no</enable>
+                              </router-advertisement>
+                            </neighbor-discovery>
+                          </ipv6>
+                          <ndp-proxy>
+                            <enabled>no</enabled>
+                          </ndp-proxy>
+                          <dhcp-client>
+                            <create-default-route>no</create-default-route>
+                          </dhcp-client>
+                          <lldp>
+                            <enable>no</enable>
+                          </lldp>
+                          <interface-management-profile>AZURE-PROBES</interface-management-profile>
+                        </layer3>
+                        <comment>Private</comment>
+                      </entry>
+                      <entry name="ethernet1/2">
+                        <layer3>
+                          <ipv6>
+                            <neighbor-discovery>
+                              <router-advertisement>
+                                <enable>no</enable>
+                              </router-advertisement>
+                            </neighbor-discovery>
+                          </ipv6>
+                          <ndp-proxy>
+                            <enabled>no</enabled>
+                          </ndp-proxy>
+                          <interface-management-profile>AZURE-PROBES</interface-management-profile>
+                          <lldp>
+                            <enable>no</enable>
+                          </lldp>
+                          <dhcp-client>
+                            <create-default-route>no</create-default-route>
+                          </dhcp-client>
+                        </layer3>
+                        <comment>Public</comment>
+                      </entry>
+                    </ethernet>
+                  </interface>
+                  <profiles>
+                    <interface-management-profile>
+                      <entry name="AZURE-PROBES">
+                        <http>yes</http>
+                        <https>yes</https>
+                        <permitted-ip>
+                          <entry name="168.63.0.0/16"/>
+                          <entry name="10.0.0.0/8"/>
+                        </permitted-ip>
+                      </entry>
+                    </interface-management-profile>
+                  </profiles>
+                </network>
+              </entry>
+            </devices>
+          </config>
+        </entry>
+        <entry name="outbound-template">
+          <description>Outbound firewall template</description>
+          <settings>
+            <default-vsys>vsys1</default-vsys>
+          </settings>
+          <config>
+            <devices>
+              <entry name="localhost.localdomain">
+                <vsys>
+                  <entry name="vsys1">
+                    <import>
+                      <network>
+                        <interface>
+                          <member>ethernet1/1</member>
+                          <member>ethernet1/2</member>
+                        </interface>
+                      </network>
+                    </import>
+                    <zone>
+                      <entry name="PRIVATE">
+                        <network>
+                          <layer3>
+                            <member>ethernet1/2</member>
+                          </layer3>
+                          <log-setting>forward_panorama</log-setting>
+                        </network>
+                      </entry>
+                      <entry name="PUBLIC">
+                        <network>
+                          <layer3>
+                            <member>ethernet1/1</member>
+                          </layer3>
+                          <log-setting>forward_panorama</log-setting>
+                        </network>
+                      </entry>
+                    </zone>
+                  </entry>
+                </vsys>
+                <network>
+                  <profiles>
+                    <interface-management-profile>
+                      <entry name="AZURE-PROBES">
+                        <http>yes</http>
+                        <https>yes</https>
+                        <permitted-ip>
+                          <entry name="10.0.0.0/8"/>
+                          <entry name="168.63.0.0/16"/>
+                        </permitted-ip>
+                      </entry>
+                    </interface-management-profile>
+                  </profiles>
+                  <virtual-router>
+                    <entry name="outbound">
+                      <ecmp>
+                        <algorithm>
+                          <ip-modulo/>
+                        </algorithm>
+                      </ecmp>
+                      <protocol>
+                        <bgp>
+                          <routing-options>
+                            <graceful-restart>
+                              <enable>yes</enable>
+                            </graceful-restart>
+                          </routing-options>
+                          <enable>no</enable>
+                        </bgp>
+                        <rip>
+                          <enable>no</enable>
+                        </rip>
+                        <ospf>
+                          <enable>no</enable>
+                        </ospf>
+                        <ospfv3>
+                          <enable>no</enable>
+                        </ospfv3>
+                      </protocol>
+                      <interface>
+                        <member>ethernet1/1</member>
+                        <member>ethernet1/2</member>
+                      </interface>
+                      <routing-table>
+                        <ip>
+                          <static-route>
+                            <entry name="default_gateway">
+                              <nexthop>
+                                <ip-address>10.110.129.1</ip-address>
+                              </nexthop>
+                              <bfd>
+                                <profile>None</profile>
+                              </bfd>
+                              <path-monitor>
+                                <enable>no</enable>
+                                <failure-condition>any</failure-condition>
+                                <hold-time>2</hold-time>
+                              </path-monitor>
+                              <interface>ethernet1/1</interface>
+                              <metric>10</metric>
+                              <destination>0.0.0.0/0</destination>
+                              <route-table>
+                                <unicast/>
+                              </route-table>
+                            </entry>
+                            <entry name="azure_internal">
+                              <nexthop>
+                                <ip-address>10.110.0.1</ip-address>
+                              </nexthop>
+                              <bfd>
+                                <profile>None</profile>
+                              </bfd>
+                              <path-monitor>
+                                <enable>no</enable>
+                                <failure-condition>any</failure-condition>
+                                <hold-time>2</hold-time>
+                              </path-monitor>
+                              <interface>ethernet1/2</interface>
+                              <metric>10</metric>
+                              <destination>10.0.0.0/8</destination>
+                              <route-table>
+                                <unicast/>
+                              </route-table>
+                            </entry>
+                            <entry name="probe">
+                              <path-monitor>
+                                <enable>no</enable>
+                                <failure-condition>any</failure-condition>
+                                <hold-time>2</hold-time>
+                              </path-monitor>
+                              <nexthop>
+                                <ip-address>10.110.0.1</ip-address>
+                              </nexthop>
+                              <bfd>
+                                <profile>None</profile>
+                              </bfd>
+                              <interface>ethernet1/2</interface>
+                              <metric>10</metric>
+                              <destination>168.63.129.16/32</destination>
+                              <route-table>
+                                <unicast/>
+                              </route-table>
+                            </entry>
+                          </static-route>
+                        </ip>
+                      </routing-table>
+                    </entry>
+                  </virtual-router>
+                  <interface>
+                    <ethernet>
+                      <entry name="ethernet1/1">
+                        <layer3>
+                          <ipv6>
+                            <neighbor-discovery>
+                              <router-advertisement>
+                                <enable>no</enable>
+                              </router-advertisement>
+                            </neighbor-discovery>
+                          </ipv6>
+                          <ndp-proxy>
+                            <enabled>no</enabled>
+                          </ndp-proxy>
+                          <interface-management-profile>AZURE-PROBES</interface-management-profile>
+                          <lldp>
+                            <enable>no</enable>
+                          </lldp>
+                          <dhcp-client>
+                            <create-default-route>no</create-default-route>
+                          </dhcp-client>
+                        </layer3>
+                        <comment>Public</comment>
+                      </entry>
+                      <entry name="ethernet1/2">
+                        <layer3>
+                          <ipv6>
+                            <neighbor-discovery>
+                              <router-advertisement>
+                                <enable>no</enable>
+                              </router-advertisement>
+                            </neighbor-discovery>
+                          </ipv6>
+                          <ndp-proxy>
+                            <enabled>no</enabled>
+                          </ndp-proxy>
+                          <dhcp-client>
+                            <create-default-route>no</create-default-route>
+                          </dhcp-client>
+                          <interface-management-profile>AZURE-PROBES</interface-management-profile>
+                          <lldp>
+                            <enable>no</enable>
+                          </lldp>
+                        </layer3>
+                        <comment>Private</comment>
+                      </entry>
+                    </ethernet>
+                  </interface>
+                </network>
+              </entry>
+            </devices>
+          </config>
+        </entry>
+      </template>
+      <template-stack>
+        <entry name="INBOUND">
+          <templates>
+            <member>inbound-template</member>
+          </templates>
+          <description>Template stack for inbound firewalls</description>
+          <devices>
+            <entry name="6407C044071F6BE"/>
+          </devices>
+          <settings>
+            <default-vsys>vsys1</default-vsys>
+          </settings>
+        </entry>
+        <entry name="OUTBOUND">
+          <templates>
+            <member>outbound-template</member>
+          </templates>
+          <settings>
+            <default-vsys>vsys1</default-vsys>
+          </settings>
+          <description>Template stack for outbound firewalls</description>
+          <devices>
+            <entry name="61676609E66FE5A"/>
+            <entry name="6F8D2CDF3EFA00E"/>
+          </devices>
+        </entry>
+      </template-stack>
+    </entry>
+  </devices>
+  <readonly>
+    <devices>
+      <entry name="localhost.localdomain">
+        <device-group>
+          <entry name="INBOUND">
+            <id>11</id>
+          </entry>
+          <entry name="OUTBOUND">
+            <id>12</id>
+          </entry>
+        </device-group>
+        <template>
+          <entry name="inbound-template">
+            <id>13</id>
+            <config>
+              <devices>
+                <entry name="localhost.localdomain">
+                  <vsys>
+                    <entry name="vsys1">
+                      <zone>
+                        <entry name="PRIVATE">
+                          <id>17</id>
+                        </entry>
+                        <entry name="PUBLIC">
+                          <id>18</id>
+                        </entry>
+                      </zone>
+                    </entry>
+                  </vsys>
+                </entry>
+              </devices>
+            </config>
+          </entry>
+          <entry name="outbound-template">
+            <id>14</id>
+            <config>
+              <devices>
+                <entry name="localhost.localdomain">
+                  <vsys>
+                    <entry name="vsys1">
+                      <zone>
+                        <entry name="PRIVATE">
+                          <id>19</id>
+                        </entry>
+                        <entry name="PUBLIC">
+                          <id>20</id>
+                        </entry>
+                      </zone>
+                    </entry>
+                  </vsys>
+                </entry>
+              </devices>
+            </config>
+          </entry>
+        </template>
+        <template-stack>
+          <entry name="INBOUND">
+            <id>15</id>
+          </entry>
+          <entry name="OUTBOUND">
+            <id>16</id>
+          </entry>
+        </template-stack>
+      </entry>
+    </devices>
+    <max-internal-id>20</max-internal-id>
+  </readonly>
+</config>

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<config>
+  <shared>
+    <address>
+      <entry name="testhost_10.100.100.10">
+        <ip-netmask>10.100.100.10</ip-netmask>
+        <description>The Ubuntu test host.</description>
+        <tag>
+          <member>DEMO-STATIC</member>
+          <member>SECOND-TAG</member>
+        </tag>
+      </entry>
+      <entry name="testhost_public_ip_DYNAMIC">
+        <ip-netmask>20.213.243.31</ip-netmask>
+        <description>Dynamic address of public test host, will change per deployment.</description>
+        <tag>
+          <member>DEMO-DYNAMIC</member>
+          <member>SECOND-TAG</member>
+        </tag>
+      </entry>
+    </address>
+  </shared>
+</config>
