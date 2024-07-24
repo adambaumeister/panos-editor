@@ -13,6 +13,7 @@ pydantic = "^2.8.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"
+black = "^24.4.2"
 
 [build-system]
 requires = ["poetry-core"]

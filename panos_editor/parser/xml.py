@@ -49,7 +49,7 @@ class PanosObject:
             "attrs": self.attrs,
             "text": self.text,
             "children": children_dicts,
-            "elements": self.elements
+            "elements": self.elements,
         }
 
 

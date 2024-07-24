@@ -13,7 +13,9 @@ class SelectQuery:
         self.path = path
 
     def __call__(self, collection: PanosObjectCollection):
-        return PanosObjectCollection(self.select_object_recurse(list(collection), self.path))
+        return PanosObjectCollection(
+            self.select_object_recurse(list(collection), self.path)
+        )
 
     def select_object_recurse(self, objects: list[PanosObject], path: list[str]):
         result = []
@@ -37,9 +39,7 @@ class SelectQuery:
 
 
 class SearchQuery:
-    def __init__(
-            self, relative_path: list[str], search_function: Callable
-    ):
+    def __init__(self, relative_path: list[str], search_function: Callable):
         """
         A single search query.
 
