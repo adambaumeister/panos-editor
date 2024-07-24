@@ -37,6 +37,7 @@ class PanosObject:
             else:
                 add_to_list(child.tag, this.children, PanosObject.from_xml(child))
 
+        this.attrs = dict(xml.attrib)
         return this
 
     def to_dict(self):
