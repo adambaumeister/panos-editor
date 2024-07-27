@@ -12,3 +12,8 @@ FIXTURE_DIR = os.path.join(
 @pytest.fixture
 def dummy_xml():
     return fromstring(open(os.path.join(FIXTURE_DIR, "dummy.xml")).read())
+
+
+@pytest.fixture
+def lab_xml():
+    return fromstring(open(os.path.join(FIXTURE_DIR, "lab.xml")).read())

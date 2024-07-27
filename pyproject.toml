@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.12"
 lxml = "^5.2.2"
 pydantic = "^2.8.2"
+coverage = "^7.6.0"
 
 
 [tool.poetry.group.dev.dependencies]
