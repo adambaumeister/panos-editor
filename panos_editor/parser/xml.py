@@ -27,18 +27,38 @@ class PanosObject:
         self.elements: dict[str, Union[str, list]] = {}
         self.attrs: dict = {}
         self.text = ""
+        self.xpath = []
 
     @classmethod
-    def from_xml(cls, xml: Element):
+    def from_xml(cls, xml: Element, current_xpath: list = None):
         this = cls()
+
+        xpath = this.calc_xpath(xml)
+        if not current_xpath:
+            my_xpath = [xpath]
+        else:
+            my_xpath = current_xpath.copy()
+            my_xpath.append(xpath)
+
+        this.xpath = my_xpath
+
         for child in xml:
             if len(child) == 0 and child.text:
                 add_to_dict(child.tag, this.elements, child.text)
             else:
-                add_to_list(child.tag, this.children, PanosObject.from_xml(child))
+                add_to_list(
+                    child.tag, this.children, PanosObject.from_xml(child, my_xpath)
+                )
 
         this.attrs = dict(xml.attrib)
         return this
+
+    def calc_xpath(self, xml: Element):
+        if xml.tag == "entry":
+            name = xml.attrib.get("name")
+            return f"entry[@name='{name}']"
+        else:
+            return xml.tag
 
     def to_dict(self):
         children_dicts = {}
@@ -46,6 +66,7 @@ class PanosObject:
             children_dicts[k] = [x.to_dict() for x in v]
 
         return {
+            "xpath": "/" + "/".join(self.xpath),
             "attrs": self.attrs,
             "text": self.text,
             "children": children_dicts,

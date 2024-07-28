@@ -1,3 +1,5 @@
+import json
+
 from panos_editor.parser.query_functions import ExactOrIn
 from panos_editor.parser.query import And, SearchQuery
 from panos_editor.tests.fixtures import dummy_xml, lab_xml
@@ -70,10 +72,10 @@ class TestAnd:
         assert result[0].attrs.get("name") == expected_name
 
 
-class TestJoin:
+class TestInnerJoin:
     def test_get_value_recursive(self, lab_xml):
         from panos_editor.parser.xml import PanosObject, PanosObjectCollection
-        from panos_editor.parser.query import SelectQuery, Join
+        from panos_editor.parser.query import SelectQuery, InnerJoin
 
         c = PanosObjectCollection([PanosObject.from_xml(lab_xml)])
 
@@ -83,6 +85,7 @@ class TestJoin:
         q = SelectQuery(["devices", "device-group", "post-rulebase", "security", "rules"])
         right = q(c)
 
-        j = Join(["name"], ["destination"])
+        j = InnerJoin(["name"], ["destination"])
         result = j(left, right)
-        print(result[0].to_dict())
+
+        assert result[0].attrs.get("name") == "TESTHOST-SSH"

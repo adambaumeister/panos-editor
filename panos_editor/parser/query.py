@@ -36,13 +36,15 @@ def get_value_recursive(obj: PanosObject, path: list[str]):
             return get_value_recursive(child, next_path)
 
 
-class Join:
+class InnerJoin:
     def __init__(self, left_path: list[str], right_path: list[str]):
         """
         Implements the ability to 'join' multiple collections on user-specified common attributes between those collections.
 
+        This is an Inner Join implementation, returning only those objects that are teh asme between the two items.
+
         Examples:
-            >>> j = Join(["name"], ["source"])
+            >>> j = InnerJoin(["name"], ["source"])
             >>> j(PanosObjectCollection(...), PanosObjectCollection(...))
         """
         self.left_path = left_path
@@ -141,38 +143,9 @@ class SearchQuery:
         """
         result = []
         for obj in objects:
-            if self.search_objects_recursive([obj], path):
-                result.append(obj)
+            value = get_value_recursive(obj, path)
+            if value:
+                if self.search_function(value):
+                    result.append(obj)
 
         return result
-
-    def search_objects_recursive(self, objects: list[PanosObject], path: list[str]):
-        match = False
-
-        key = ""
-        if len(path) > 0:
-            key = path[0]
-
-        for obj in objects:
-            # Handle the case where the search path doesn't include the final identifier
-            member_value = obj.elements.get("member")
-            if len(path) == 0 and member_value:
-                if self.search_function(member_value):
-                    match = True
-
-            element_value = obj.elements.get(key)
-            if len(path) == 1 and element_value:
-                if self.search_function(element_value):
-                    match = True
-
-            # Treat 'entry' as a special child so the user doesn't have to explicitly ask for it
-            next_obj = obj.children.get(key)
-            if next_obj:
-                next_path = path[1:]
-                match = self.search_objects_recursive(next_obj, next_path)
-
-            next_obj = obj.children.get("entry")
-            if next_obj:
-                match = self.search_objects_recursive(next_obj, path)
-
-        return match

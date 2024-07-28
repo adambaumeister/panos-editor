@@ -7,4 +7,4 @@ class TestPanosObject:
         from panos_editor.parser.xml import PanosObject
 
         result = PanosObject.from_xml(dummy_xml)
-        print(json.dumps(result.to_dict(), indent=4, sort_keys=True))
+        assert result.xpath == ["config"]
