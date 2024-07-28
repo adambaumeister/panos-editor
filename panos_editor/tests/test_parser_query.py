@@ -1,5 +1,3 @@
-import json
-
 from panos_editor.parser.query_functions import ExactOrIn
 from panos_editor.parser.query import And, SearchQuery
 from panos_editor.tests.fixtures import dummy_xml, lab_xml

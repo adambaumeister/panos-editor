@@ -1,0 +1,24 @@
+site_name: PAN-OS Editor Documentation
+
+theme:
+  name: "material"
+  features:
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Query Types: query/types.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
