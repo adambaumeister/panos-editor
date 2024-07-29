@@ -1,6 +1,6 @@
 from typing import Callable
 
-from panos_editor.parser.query_functions import ExactOrIn
+from panos_editor.query.query_functions import ExactOrIn
 from panos_editor.parser.xml import PanosObjectCollection, PanosObject
 
 
@@ -68,7 +68,7 @@ class And:
         Implements 'AND' predicate logic
 
         Example
-            >>> from panos_editor.parser.query_functions import ExactOrIn
+            >>> from panos_editor.query.query_functions import ExactOrIn
             >>> q = And(SearchQuery(["tag"], ExactOrIn("DEMO-STATIC"), SearchQuery(["ip-netmask"], ExactOrIn("10.100.10.1"))
         """
         self.predicates = predicates
@@ -126,7 +126,7 @@ class SearchQuery:
         A single search query.
 
         Examples:
-            >>> from panos_editor.parser.query_functions import ExactOrIn
+            >>> from panos_editor.query.query_functions import ExactOrIn
             >>> q = SearchQuery(["tag"], ExactOrIn("DEMO-STATIC"))
         """
         self.relative_path = relative_path

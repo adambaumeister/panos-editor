@@ -1,4 +1,4 @@
 
 # Query Types Reference
 
-::: panos_editor.parser.query_functions
+::: panos_editor.query.query_functions

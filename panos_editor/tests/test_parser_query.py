@@ -1,5 +1,5 @@
-from panos_editor.parser.query_functions import ExactOrIn
-from panos_editor.parser.query import And, SearchQuery
+from panos_editor.query.query_functions import ExactOrIn
+from panos_editor.query.functions import And, SearchQuery
 from panos_editor.tests.fixtures import dummy_xml, lab_xml
 
 import pytest
@@ -8,7 +8,7 @@ import pytest
 class TestSelectQuery:
     def test___call__(self, dummy_xml):
         from panos_editor.parser.xml import PanosObject, PanosObjectCollection
-        from panos_editor.parser.query import SelectQuery
+        from panos_editor.query.functions import SelectQuery
 
         c = PanosObjectCollection([PanosObject.from_xml(dummy_xml)])
         q = SelectQuery(["shared", "address"])
@@ -31,12 +31,11 @@ class TestSearchQuery:
     )
     def test___call___single_result(self, dummy_xml, search_query, expected_name):
         from panos_editor.parser.xml import PanosObject, PanosObjectCollection
-        from panos_editor.parser.query import SearchQuery, SelectQuery
+        from panos_editor.query.functions import SearchQuery, SelectQuery
 
         c = PanosObjectCollection([PanosObject.from_xml(dummy_xml)])
         q = SelectQuery(["shared", "address"])
         selected = q(c)
-
         q = SearchQuery(*search_query)
         result = q(selected)
         assert len(result) == 1
@@ -58,7 +57,7 @@ class TestAnd:
     )
     def test___call___single_match(self, dummy_xml, search_query, expected_name):
         from panos_editor.parser.xml import PanosObject, PanosObjectCollection
-        from panos_editor.parser.query import SelectQuery
+        from panos_editor.query.functions import SelectQuery
 
         c = PanosObjectCollection([PanosObject.from_xml(dummy_xml)])
         q = SelectQuery(["shared", "address"])
@@ -73,7 +72,7 @@ class TestAnd:
 class TestInnerJoin:
     def test_get_value_recursive(self, lab_xml):
         from panos_editor.parser.xml import PanosObject, PanosObjectCollection
-        from panos_editor.parser.query import SelectQuery, InnerJoin
+        from panos_editor.query.functions import SelectQuery, InnerJoin
 
         c = PanosObjectCollection([PanosObject.from_xml(lab_xml)])
 
