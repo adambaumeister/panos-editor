@@ -1,11 +1,37 @@
 import re
 from typing import Union, Self
-from pyparsing import Word, alphanums, one_of, Regex, infix_notation, OpAssoc, printables, Combine
+from pyparsing import (
+    Word,
+    alphanums,
+    one_of,
+    Regex,
+    infix_notation,
+    OpAssoc,
+    QuotedString,
+)
+from panos_editor.query.functions import SelectQuery, SearchQuery
+from panos_editor.query.query_functions import ExactOrIn
+
 
 class QuerySyntaxError(Exception):
     """Raises when the provided string query is incorrect for whatever reason"""
 
     pass
+
+
+def convert_to_queries(tokens: list[str]):
+    """Converts a parsed query into a SearchQuery and SelectQuery objects."""
+    token_map = {"==": ExactOrIn}
+
+    relative_path = tokens[0].split(".")[:-1]
+    search_path = relative_path[-1]
+    search_function = token_map.get(tokens[1])
+    if not search_function:
+        raise QuerySyntaxError(f"Unknown Operator '{tokens[1]}'")
+
+    return SearchQuery(
+        relative_path=relative_path, search_function=search_function
+    )
 
 
 class StringParser:
@@ -15,7 +41,7 @@ class StringParser:
     Examples
         Parse a basic select string
 
-        >>> StringParser("config.shared.address.ip-netmask == 10.100.100.10")
+        >>> StringParser("config.shared.address ip-netmask == 10.100.100.10 and name == testlab")
 
         Parse a basic Join String
 
@@ -23,29 +49,16 @@ class StringParser:
 
         Parse a complex Select string with multple predicates
 
-        >>> StringParser("(config.shared.address.ip-netmask == 10.100.100.10 AND config.shared.address.name == 'testlab') OR config.shared.address.name == 'other'")
-
-        # Probably go with this format, its not that much longer and its clearer and easier to parse
-        >>> StringParser("SELECT config.shared.address WHERE ip-netmask == '10.100.100.10'")
+        >>> StringParser("(config.shared.address ip-netmask == 10.100.100.10 AND config.shared.address.name == 'testlab') OR config.shared.address.name == 'other'")
     """
 
-    def __init__(self, string: str):
-        self.string = string
-
-        self.RE_WORD = re.compile(r"[a-zA-Z.\-_0-9]+|==")
-        self.PREDICATE_START = "("
-        pass
-
-    def parse(self, string: str, current_predicate=None, current_query=None):
+    def parse(self, string: str):
         selector = Regex(r"[a-zA-Z\.\-_0-9]+")
-        op = one_of(["=="])
-        value = Regex(r"[a-zA-Z\.\-_0-9]+")
+        op = one_of(["==", "incidr"])
+        value = Regex(r"[a-zA-Z\.\-_0-9]+") | QuotedString(quote_char='"')
 
         query = selector + op + value
-        expr = infix_notation(
-            query,
-            [
-                (one_of("AND OR"), 2, OpAssoc.RIGHT)
-            ]
-        )
-        expr.run_tests(string, full_dump=False)
+        query.set_parse_action(convert_to_queries)
+
+        expr = infix_notation(query, [(one_of("AND OR"), 2, OpAssoc.RIGHT)])
+        return expr.parse_string(string)
