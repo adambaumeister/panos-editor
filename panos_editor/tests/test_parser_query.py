@@ -79,7 +79,9 @@ class TestInnerJoin:
         q = SelectQuery(["shared", "address"])
         left = q(c)
 
-        q = SelectQuery(["devices", "device-group", "post-rulebase", "security", "rules"])
+        q = SelectQuery(
+            ["devices", "device-group", "post-rulebase", "security", "rules"]
+        )
         right = q(c)
 
         j = InnerJoin(["name"], ["destination"])

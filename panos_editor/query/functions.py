@@ -50,7 +50,12 @@ class InnerJoin:
         self.left_path = left_path
         self.right_path = right_path
 
-    def __call__(self, left: PanosObjectCollection, right: PanosObjectCollection, on_function: Callable = ExactOrIn):
+    def __call__(
+        self,
+        left: PanosObjectCollection,
+        right: PanosObjectCollection,
+        on_function: Callable = ExactOrIn,
+    ):
         joined_objects = []
         for left_obj in left:
             left_value = get_value_recursive(left_obj, self.left_path)
@@ -185,4 +190,3 @@ class Statement:
     def __call__(self, collection: PanosObjectCollection):
         selected = self.select(collection)
         return self.search(selected)
-

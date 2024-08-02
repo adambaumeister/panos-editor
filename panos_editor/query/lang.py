@@ -32,7 +32,9 @@ def convert_to_queries(tokens):
     if not search_function:
         raise QuerySyntaxError(f"Unknown Operator '{tokens[1]}'")
 
-    return SearchQuery(relative_path=search_path, search_function=search_function(search_value))
+    return SearchQuery(
+        relative_path=search_path, search_function=search_function(search_value)
+    )
 
 
 class PredicateParser:
