@@ -1,5 +1,7 @@
 import re
-from typing import Union, Self
+from typing import Union, Self, Callable
+
+import pyparsing.results
 from pyparsing import (
     Word,
     alphanums,
@@ -8,8 +10,9 @@ from pyparsing import (
     infix_notation,
     OpAssoc,
     QuotedString,
+    ZeroOrMore,
 )
-from panos_editor.query.functions import SelectQuery, SearchQuery
+from panos_editor.query.functions import SelectQuery, SearchQuery, And, Or, Statement
 from panos_editor.query.query_functions import ExactOrIn
 
 
@@ -19,19 +22,79 @@ class QuerySyntaxError(Exception):
     pass
 
 
-def convert_to_queries(tokens: list[str]):
+def convert_to_queries(tokens):
     """Converts a parsed query into a SearchQuery and SelectQuery objects."""
     token_map = {"==": ExactOrIn}
 
-    relative_path = tokens[0].split(".")[:-1]
-    search_path = relative_path[-1]
+    search_path = tokens[0].split(".")
+    search_value = tokens[2]
     search_function = token_map.get(tokens[1])
     if not search_function:
         raise QuerySyntaxError(f"Unknown Operator '{tokens[1]}'")
 
-    return SearchQuery(
-        relative_path=relative_path, search_function=search_function
-    )
+    return SearchQuery(relative_path=search_path, search_function=search_function(search_value))
+
+
+class PredicateParser:
+    def __init__(self):
+        self.queries: list[SearchQuery] = []
+        self.query_func: Callable = And
+        self.children: list[PredicateParser] = []
+
+    def add_query(self, query: SearchQuery):
+        self.queries.append(query)
+
+    def add_child(self, p: list[Self]):
+        self.children += p
+
+    def convert_to_prdedicates(self):
+        queries = self.queries
+        for child in self.children:
+            queries.append(child.convert_to_prdedicates())
+
+        return self.query_func(*queries)
+
+
+def convert_to_predicates_recursive(
+    q_list: Union[list, SearchQuery], predicate_parser: PredicateParser = None
+):
+    if not predicate_parser:
+        predicate_parser = PredicateParser()
+
+    predicate_parsers = [predicate_parser]
+
+    if type(q_list) is not pyparsing.ParseResults:
+        predicate_parser.add_query(q_list)
+        return predicate_parsers
+
+    for sq_or_list in q_list:
+
+        if isinstance(sq_or_list, pyparsing.results.ParseResults):
+            next_parser = PredicateParser()
+            predicate_parser.add_child(
+                convert_to_predicates_recursive(sq_or_list, next_parser)
+            )
+        elif sq_or_list == "OR":
+            predicate_parser.query_func = Or
+        elif type(sq_or_list) is SearchQuery:
+            predicate_parser.add_query(sq_or_list)
+
+    return predicate_parsers
+
+
+def string_to_select(tokens):
+    path = tokens[0]
+    return SelectQuery(path.split("."))
+
+
+def pairwise(it):
+    it = iter(it)
+    while True:
+        try:
+            yield next(it), next(it)
+        except StopIteration:
+            # no more elements in the iterator
+            return
 
 
 class StringParser:
@@ -54,11 +117,29 @@ class StringParser:
 
     def parse(self, string: str):
         selector = Regex(r"[a-zA-Z\.\-_0-9]+")
+        selector.add_parse_action(string_to_select)
+
+        relative_path = Regex(r"[a-zA-Z\.\-_0-9]+")
+
         op = one_of(["==", "incidr"])
         value = Regex(r"[a-zA-Z\.\-_0-9]+") | QuotedString(quote_char='"')
 
-        query = selector + op + value
+        query = relative_path + op + value
+        expr = infix_notation(query, [(one_of("AND OR"), 2, OpAssoc.RIGHT)])
+
+        statement = selector + expr
+
         query.set_parse_action(convert_to_queries)
 
-        expr = infix_notation(query, [(one_of("AND OR"), 2, OpAssoc.RIGHT)])
-        return expr.parse_string(string)
+        result = statement.parse_string(string)
+
+        statements = []
+        for selector, queries in pairwise(result):
+            predicates = []
+            predicate_parsers = convert_to_predicates_recursive(queries)
+            for pp in predicate_parsers:
+                predicates.append(pp.convert_to_prdedicates())
+
+            statements.append(Statement(select=selector, search=predicates[0]))
+
+        return statements

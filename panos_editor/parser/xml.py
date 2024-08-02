@@ -87,3 +87,6 @@ class PanosObjectCollection:
 
     def __len__(self):
         return len(self.objects)
+
+    def __iadd__(self, other):
+        self.objects += other

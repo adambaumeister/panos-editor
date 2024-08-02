@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Union
 
 from panos_editor.query.query_functions import ExactOrIn
 from panos_editor.parser.xml import PanosObjectCollection, PanosObject
@@ -69,7 +69,7 @@ class And:
 
         Example
             >>> from panos_editor.query.query_functions import ExactOrIn
-            >>> q = And(SearchQuery(["tag"], ExactOrIn("DEMO-STATIC"), SearchQuery(["ip-netmask"], ExactOrIn("10.100.10.1"))
+            >>> q = And(SearchQuery(["tag"], ExactOrIn("DEMO-STATIC")), SearchQuery(["ip-netmask"], ExactOrIn("10.100.10.1")))
         """
         self.predicates = predicates
 
@@ -78,6 +78,26 @@ class And:
         for predicate in self.predicates:
             # Filter through the searchqueries such that only all matching results are returned
             result = predicate(result)
+
+        return result
+
+
+class Or:
+    def __init__(self, *predicates):
+        """
+        Implements 'OR' predicate logic
+
+        Example
+            >>> from panos_editor.query.query_functions import ExactOrIn
+            >>> q = Or(SearchQuery(["tag"], ExactOrIn("DEMO-STATIC")), SearchQuery(["ip-netmask"], ExactOrIn("10.100.10.1")))
+        """
+        self.predicates = predicates
+
+    def __call__(self, collection: PanosObjectCollection):
+        result = collection
+        for predicate in self.predicates:
+            # Filter through the searchqueries such that only all matching results are returned
+            result += predicate(result)
 
         return result
 
@@ -149,3 +169,21 @@ class SearchQuery:
                     result.append(obj)
 
         return result
+
+
+class Statement:
+    def __init__(self, select: SelectQuery, search: Union[And, Or]):
+        """
+        A complete statement for quering PAN-OS Objects.
+
+        Arguments:
+            select: The `SelectQuery` object for selecting the objects
+            *predicates: The list of Predicates like `And` to use for searching the selected objects
+        """
+        self.select = select
+        self.search = search
+
+    def __call__(self, collection: PanosObjectCollection):
+        selected = self.select(collection)
+        return self.search(selected)
+
