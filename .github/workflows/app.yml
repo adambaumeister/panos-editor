@@ -42,4 +42,4 @@ jobs:
 
     - name: Check Formatting
       run: |
-        poetry run black --check
+        poetry run black panos_editor --check
