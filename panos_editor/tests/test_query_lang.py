@@ -24,7 +24,8 @@ class TestStringParser:
         "string, expected",
         [
             # Normal
-            ("shared.address ip-netmask == 10.100.100.10", ["testhost_10.100.100.10"])
+           # ("shared.address ip-netmask == 10.100.100.10", ["testhost_10.100.100.10"]),
+            ("shared.address ip-netmask == 10.100.100.10 OR name == testhost_public_ip_DYNAMIC", ["testhost_10.100.100.10", "testhost_public_ip_DYNAMIC"])
         ]
     )
     def test_parse_and_query(self, string, expected, dummy_xml):
@@ -38,7 +39,7 @@ class TestStringParser:
         statement = r[0]
         result = statement(c)
         try:
-            assert len(result) == 1
+            assert [x.attrs.get('name') for x in result] == expected
         except AssertionError:
             print(statement.search.predicates)
             print(result.objects)

@@ -94,12 +94,11 @@ class Or:
         self.predicates = predicates
 
     def __call__(self, collection: PanosObjectCollection):
-        result = collection
+        result_objects = []
         for predicate in self.predicates:
-            # Filter through the searchqueries such that only all matching results are returned
-            result += predicate(result)
+            result_objects += predicate(collection)
 
-        return result
+        return PanosObjectCollection(result_objects)
 
 
 class SelectQuery:
