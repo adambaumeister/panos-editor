@@ -1,4 +1,4 @@
-from typing import Callable, Union
+from typing import Callable, Union, Optional
 
 from panos_editor.query.query_functions import ExactOrIn
 from panos_editor.parser.xml import PanosObjectCollection, PanosObject
@@ -37,7 +37,9 @@ def get_value_recursive(obj: PanosObject, path: list[str]):
 
 
 class InnerJoin:
-    def __init__(self, left_path: list[str], right_path: list[str]):
+    def __init__(
+        self, left_path: list[str], right_path: list[str], join_func=ExactOrIn
+    ):
         """
         Implements the ability to 'join' multiple collections on user-specified common attributes between those collections.
 
@@ -46,9 +48,12 @@ class InnerJoin:
         Examples:
             >>> j = InnerJoin(["name"], ["source"])
             >>> j(PanosObjectCollection(...), PanosObjectCollection(...))
+
+        Note that this join function adds a reference to the joined objects to the original object.
         """
         self.left_path = left_path
         self.right_path = right_path
+        self.join_func = join_func
 
     def __call__(
         self,
@@ -61,7 +66,9 @@ class InnerJoin:
             left_value = get_value_recursive(left_obj, self.left_path)
             for right_obj in right:
                 right_value = get_value_recursive(right_obj, self.right_path)
-                if ExactOrIn(left_value)(right_value):
+                if self.join_func(left_value)(right_value):
+                    left_obj.add_joined_object(right_obj)
+                    right_obj.add_joined_object(left_obj)
                     joined_objects.append(right_obj)
 
         return joined_objects
@@ -176,16 +183,26 @@ class SearchQuery:
 
 
 class Statement:
-    def __init__(self, select: SelectQuery, search: Union[And, Or]):
+    def __init__(
+        self,
+        select: SelectQuery,
+        search: Union[And, Or],
+        join_select: Optional[SelectQuery],
+        join_search: Optional[Union[And, Or]],
+    ):
         """
         A complete statement for quering PAN-OS Objects.
 
         Arguments:
             select: The `SelectQuery` object for selecting the objects
             *predicates: The list of Predicates like `And` to use for searching the selected objects
+            join_select: Optional - if provided, statement will be joined with the selected objects
+            join_search: Optional - selected joined ob
         """
         self.select = select
         self.search = search
+        self.join_select = join_select
+        self.join_search = join_search
 
     def __call__(self, collection: PanosObjectCollection):
         selected = self.select(collection)

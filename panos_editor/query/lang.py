@@ -84,6 +84,11 @@ def convert_to_predicates_recursive(
     return predicate_parsers
 
 
+def convert_to_joins(tokens):
+    print(tokens)
+    pass
+
+
 def string_to_select(tokens):
     path = tokens[0]
     return SelectQuery(path.split("."))
@@ -103,21 +108,30 @@ class StringParser:
     """StringParser
     Parses a given string as a panos-editor query by converting it into a series of predicates.
 
-    Examples
-        Parse a basic select string
 
-        >>> StringParser("config.shared.address ip-netmask == 10.100.100.10 and name == testlab")
-
-        Parse a basic Join String
-
-        >>> StringParser("config.shared.address join devices.device-group.post-rulebase.security.rules on name == destination")
-
-        Parse a complex Select string with multple predicates
-
-        >>> StringParser("(config.shared.address ip-netmask == 10.100.100.10 AND config.shared.address.name == 'testlab') OR config.shared.address.name == 'other'")
     """
 
     def parse(self, string: str):
+        """
+
+        Examples
+            Parse a basic select string
+
+            >>> StringParser().parse("config.shared.address ip-netmask == 10.100.100.10 and name == testlab")
+
+            Parse a basic Join String
+
+            >>> StringParser().parse("config.shared.address join devices.device-group.post-rulebase.security.rules on name == destination")
+
+            Parse a complex Select string with multple predicates
+
+            >>> StringParser().parse("(config.shared.address ip-netmask == 10.100.100.10 AND config.shared.address.name == 'testlab') OR config.shared.address.name == 'other'")
+
+            Parse a Join query
+
+            >>> StringParser().parse("config.shared.address ip-netmask == 10.100.100.10 JOIN devices.device-group.post-rulebase.security.rules ON name == source")
+
+        """
         selector = Regex(r"[a-zA-Z\.\-_0-9]+")
         selector.add_parse_action(string_to_select)
 
@@ -129,7 +143,10 @@ class StringParser:
         query = relative_path + op + value
         expr = infix_notation(query, [(one_of("AND OR"), 2, OpAssoc.RIGHT)])
 
-        statement = selector + expr
+        join = "JOIN" + selector + ZeroOrMore(expr) + "ON" + relative_path + op + relative_path
+        join.set_parse_action(convert_to_joins)
+
+        statement = selector + expr + ZeroOrMore(join)
 
         query.set_parse_action(convert_to_queries)
 

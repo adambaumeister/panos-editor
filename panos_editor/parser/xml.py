@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, Self
 
 from pydantic import BaseModel, Field
 from lxml.etree import Element
@@ -28,6 +28,7 @@ class PanosObject:
         self.attrs: dict = {}
         self.text = ""
         self.xpath = []
+        self.joined_objects = []
 
     @classmethod
     def from_xml(cls, xml: Element, current_xpath: list = None):
@@ -59,6 +60,9 @@ class PanosObject:
             return f"entry[@name='{name}']"
         else:
             return xml.tag
+
+    def add_joined_object(self, joined_object: Self):
+        self.joined_objects.append(joined_object)
 
     def to_dict(self):
         children_dicts = {}
