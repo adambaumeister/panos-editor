@@ -11,8 +11,16 @@ from pyparsing import (
     OpAssoc,
     QuotedString,
     ZeroOrMore,
+    ParseException,
 )
-from panos_editor.query.functions import SelectQuery, SearchQuery, And, Or, Statement
+from panos_editor.query.functions import (
+    SelectQuery,
+    SearchQuery,
+    And,
+    Or,
+    Statement,
+    InnerJoin,
+)
 from panos_editor.query.query_functions import ExactOrIn
 
 
@@ -84,9 +92,33 @@ def convert_to_predicates_recursive(
     return predicate_parsers
 
 
-def convert_to_joins(tokens):
-    print(tokens)
-    pass
+def convert_to_joins_or_statement(tokens):
+    join_func_map = {"JOIN": InnerJoin}
+    token_map = {"==": ExactOrIn}
+    # If this is a normal statement
+    if len(tokens) == 1:
+        return tokens
+    else:
+        left_statement = tokens[0]
+        join_func = join_func_map.get(tokens[1])
+        right_statement = tokens[2]
+
+        left_path = tokens[4]
+        match_func = token_map.get(tokens[5])
+        right_path = tokens[6]
+
+        return join_func(left_statement, right_statement, left_path, right_path, match_func)
+
+
+def convert_to_statement(tokens):
+    selector = tokens[0]
+    queries = tokens[1]
+    predicates = []
+    predicate_parsers = convert_to_predicates_recursive(queries)
+    for pp in predicate_parsers:
+        predicates.append(pp.convert_to_prdedicates())
+
+    return Statement(select=selector, search=predicates[0])
 
 
 def string_to_select(tokens):
@@ -142,23 +174,15 @@ class StringParser:
 
         query = relative_path + op + value
         expr = infix_notation(query, [(one_of("AND OR"), 2, OpAssoc.RIGHT)])
+        statement = selector + expr
+        statement.set_parse_action(convert_to_statement)
 
-        join = "JOIN" + selector + ZeroOrMore(expr) + "ON" + relative_path + op + relative_path
-        join.set_parse_action(convert_to_joins)
+        join_definition = "JOIN" + statement + "ON" + relative_path + op + relative_path
 
-        statement = selector + expr + ZeroOrMore(join)
-
+        complete_statement = statement + ZeroOrMore(join_definition)
+        complete_statement.set_parse_action(convert_to_joins_or_statement)
         query.set_parse_action(convert_to_queries)
 
-        result = statement.parse_string(string)
-
-        statements = []
-        for selector, queries in pairwise(result):
-            predicates = []
-            predicate_parsers = convert_to_predicates_recursive(queries)
-            for pp in predicate_parsers:
-                predicates.append(pp.convert_to_prdedicates())
-
-            statements.append(Statement(select=selector, search=predicates[0]))
-
-        return statements
+        result = complete_statement.parse_string(string)
+        print(result)
+        return result

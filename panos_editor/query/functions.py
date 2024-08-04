@@ -1,4 +1,4 @@
-from typing import Callable, Union, Optional
+from typing import Callable, Union, Optional, Self
 
 from panos_editor.query.query_functions import ExactOrIn
 from panos_editor.parser.xml import PanosObjectCollection, PanosObject
@@ -36,7 +36,10 @@ def get_value_recursive(obj: PanosObject, path: list[str]):
             return get_value_recursive(child, next_path)
 
 
-class InnerJoin:
+
+
+
+class SimpleJoin:
     def __init__(
         self, left_path: list[str], right_path: list[str], join_func=ExactOrIn
     ):
@@ -186,9 +189,7 @@ class Statement:
     def __init__(
         self,
         select: SelectQuery,
-        search: Union[And, Or],
-        join_select: Optional[SelectQuery],
-        join_search: Optional[Union[And, Or]],
+        search: Optional[Union[And, Or]] = None
     ):
         """
         A complete statement for quering PAN-OS Objects.
@@ -196,14 +197,45 @@ class Statement:
         Arguments:
             select: The `SelectQuery` object for selecting the objects
             *predicates: The list of Predicates like `And` to use for searching the selected objects
-            join_select: Optional - if provided, statement will be joined with the selected objects
-            join_search: Optional - selected joined ob
         """
         self.select = select
         self.search = search
-        self.join_select = join_select
-        self.join_search = join_search
 
     def __call__(self, collection: PanosObjectCollection):
         selected = self.select(collection)
+        if not self.search:
+            return selected
         return self.search(selected)
+
+
+class InnerJoin:
+    def __init__(
+            self,
+            left_statement: Union[Self, Statement],
+            right_statement: Union[Self, Statement],
+            left_path: list[str],
+            right_path: list[str],
+            join_function: Callable = ExactOrIn
+    ):
+        self.left_statement = left_statement
+        self.right_statement = right_statement
+        self.join_function = join_function
+
+        self.left_path = left_path
+        self.right_path = right_path
+
+    def __call__(self, collection: PanosObjectCollection):
+        joined_objects = []
+        left = self.left_statement(collection)
+        right = self.right_statement(collection)
+
+        for left_obj in left:
+            left_value = get_value_recursive(left_obj, self.left_path)
+            for right_obj in right:
+                right_value = get_value_recursive(right_obj, self.right_path)
+                if self.join_function(left_value)(right_value):
+                    left_obj.add_joined_object(right_obj)
+                    right_obj.add_joined_object(left_obj)
+                    joined_objects.append(right_obj)
+
+        return joined_objects

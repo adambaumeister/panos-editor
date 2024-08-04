@@ -1,5 +1,5 @@
 from panos_editor.query.query_functions import ExactOrIn
-from panos_editor.query.functions import And, SearchQuery
+from panos_editor.query.functions import And, SearchQuery, Statement
 from panos_editor.tests.fixtures import dummy_xml, lab_xml
 
 import pytest
@@ -76,15 +76,16 @@ class TestInnerJoin:
 
         c = PanosObjectCollection([PanosObject.from_xml(lab_xml)])
 
-        q = SelectQuery(["shared", "address"])
-        left = q(c)
-
-        q = SelectQuery(
-            ["devices", "device-group", "post-rulebase", "security", "rules"]
+        left = Statement(
+            select=SelectQuery(["shared", "address"]),
+            search=None
         )
-        right = q(c)
+        right = Statement(
+            select=SelectQuery(["devices", "device-group", "post-rulebase", "security", "rules"]),
+            search=None
+        )
 
-        j = InnerJoin(["name"], ["destination"])
-        result = j(left, right)
+        j = InnerJoin(left, right, ["name"], ["destination"])
+        result = j(c)
 
         assert result[0].attrs.get("name") == "TESTHOST-SSH"
