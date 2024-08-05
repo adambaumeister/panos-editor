@@ -8,3 +8,5 @@ class TestPanosObject:
 
         result = PanosObject.from_xml(dummy_xml)
         assert result.xpath == ["config"]
+
+        print(result.to_dict())
