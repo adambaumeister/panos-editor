@@ -23,51 +23,51 @@
     <device>
         <entry name="localhost.localdomain">
             <device-group>
-            <entry name="INBOUND">
-                <post-rulebase>
-                <security>
-                    <rules>
-                        <entry name="OUTBOUND" uuid="24fcda30-a252-4025-ae63-d1e0965ced5d">
-                            <from>
-                                <member>PRIVATE</member>
-                            </from>
-                            <to>
-                                <member>PUBLIC</member>
-                            </to>
-                            <source>
-                                <member>testhost_10.100.100.10</member>
-                            </source>
-                            <source-user>
-                                <member>any</member>
-                            </source-user>
-                            <hip-profiles>
-                                <member>any</member>
-                            </hip-profiles>
-                            <destination>
-                                <member>any</member>
-                            </destination>
-                            <application>
-                                <member>any</member>
-                            </application>
-                            <service>
-                                <member>application-default</member>
-                            </service>
-                            <category>
-                                <member>any</member>
-                            </category>
-                            <action>allow</action>
-                            <log-setting>forward_panorama</log-setting>
-                            <log-end>yes</log-end>
-                            <description>Allow all outbound traffic.</description>
-                            <target>
-                                <negate>no</negate>
-                            </target>
-                        </entry>
-                    </rules>
-                </security>
-                </post-rulebase>
+                <entry name="INBOUND">
+                    <post-rulebase>
+                        <security>
+                            <rules>
+                                <entry name="OUTBOUND" uuid="24fcda30-a252-4025-ae63-d1e0965ced5d">
+                                    <from>
+                                        <member>PRIVATE</member>
+                                    </from>
+                                    <to>
+                                        <member>PUBLIC</member>
+                                    </to>
+                                    <source>
+                                        <member>testhost_10.100.100.10</member>
+                                    </source>
+                                    <source-user>
+                                        <member>any</member>
+                                    </source-user>
+                                    <hip-profiles>
+                                        <member>any</member>
+                                    </hip-profiles>
+                                    <destination>
+                                        <member>any</member>
+                                    </destination>
+                                    <application>
+                                        <member>any</member>
+                                    </application>
+                                    <service>
+                                        <member>application-default</member>
+                                    </service>
+                                    <category>
+                                        <member>any</member>
+                                    </category>
+                                    <action>allow</action>
+                                    <log-setting>forward_panorama</log-setting>
+                                    <log-end>yes</log-end>
+                                    <description>Allow all outbound traffic.</description>
+                                    <target>
+                                        <negate>no</negate>
+                                    </target>
+                                </entry>
+                            </rules>
+                        </security>
+                    </post-rulebase>
+                </entry>
+            </device-group>
         </entry>
-    </device-group>
-</entry>
-</device>
+    </device>
 </config>

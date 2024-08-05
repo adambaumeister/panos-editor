@@ -174,15 +174,15 @@ class StringParser:
 
         query = relative_path + op + value
         expr = infix_notation(query, [(one_of("AND OR"), 2, OpAssoc.RIGHT)])
+
         statement = selector + expr
         statement.set_parse_action(convert_to_statement)
 
-        join_definition = "JOIN" + statement + "ON" + relative_path + op + relative_path
+        join_definition = "JOIN" + selector + ZeroOrMore(expr) + "ON" + relative_path + op + relative_path
 
         complete_statement = statement + ZeroOrMore(join_definition)
         complete_statement.set_parse_action(convert_to_joins_or_statement)
         query.set_parse_action(convert_to_queries)
 
         result = complete_statement.parse_string(string)
-        print(result)
         return result

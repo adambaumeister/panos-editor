@@ -16,6 +16,17 @@ class TestSelectQuery:
         assert len(result) == 2
         assert result.objects[0].attrs
 
+    def test___call___alternate(self, dummy_xml):
+        from panos_editor.parser.xml import PanosObject, PanosObjectCollection
+        from panos_editor.query.functions import SelectQuery
+
+        c = PanosObjectCollection([PanosObject.from_xml(dummy_xml)])
+        q = SelectQuery(['device', 'device-group', 'post-rulebase', 'security', 'rules'])
+        result = q(c)
+        assert len(result) == 1
+        assert result.objects[0].attrs
+
+
 
 class TestSearchQuery:
     @pytest.mark.parametrize(
@@ -81,6 +92,7 @@ class TestInnerJoin:
             search=None
         )
         right = Statement(
+            # device.device-group.post-rulebase.security.rules
             select=SelectQuery(["devices", "device-group", "post-rulebase", "security", "rules"]),
             search=None
         )

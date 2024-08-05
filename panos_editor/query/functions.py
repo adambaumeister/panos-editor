@@ -127,9 +127,10 @@ class SelectQuery:
         self.path = path
 
     def __call__(self, collection: PanosObjectCollection):
-        return PanosObjectCollection(
+        result = PanosObjectCollection(
             self.select_object_recurse(list(collection), self.path)
         )
+        return result
 
     def select_object_recurse(self, objects: list[PanosObject], path: list[str]):
         result = []
@@ -228,7 +229,6 @@ class InnerJoin:
         joined_objects = []
         left = self.left_statement(collection)
         right = self.right_statement(collection)
-
         for left_obj in left:
             left_value = get_value_recursive(left_obj, self.left_path)
             for right_obj in right:
