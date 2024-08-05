@@ -12,6 +12,8 @@ pydantic = "^2.8.2"
 coverage = "^7.6.0"
 mkdocstrings = {extras = ["python"], version = "^0.25.2"}
 pyparsing = "^3.1.2"
+typer = "^0.12.3"
+loguru = "^0.7.2"
 
 
 [tool.poetry.group.dev.dependencies]
