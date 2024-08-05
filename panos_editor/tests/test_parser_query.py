@@ -21,11 +21,22 @@ class TestSelectQuery:
         from panos_editor.query.functions import SelectQuery
 
         c = PanosObjectCollection([PanosObject.from_xml(dummy_xml)])
-        q = SelectQuery(['device', 'device-group', 'post-rulebase', 'security', 'rules'])
+        q = SelectQuery(
+            ["device", "device-group", "post-rulebase", "security", "rules"]
+        )
         result = q(c)
         assert len(result) == 1
         assert result.objects[0].attrs
 
+    def test___call___shorthand(self, lab_xml):
+        from panos_editor.parser.xml import PanosObject, PanosObjectCollection
+        from panos_editor.query.functions import SelectQuery
+
+        c = PanosObjectCollection([PanosObject.from_xml(lab_xml)])
+        q = SelectQuery(["OUTBOUND", "post-rulebase", "security", "rules"])
+        result = q(c)
+        assert len(result) >= 1
+        assert result.objects[0].attrs
 
 
 class TestSearchQuery:
@@ -87,14 +98,13 @@ class TestInnerJoin:
 
         c = PanosObjectCollection([PanosObject.from_xml(lab_xml)])
 
-        left = Statement(
-            select=SelectQuery(["shared", "address"]),
-            search=None
-        )
+        left = Statement(select=SelectQuery(["shared", "address"]), search=None)
         right = Statement(
             # device.device-group.post-rulebase.security.rules
-            select=SelectQuery(["devices", "device-group", "post-rulebase", "security", "rules"]),
-            search=None
+            select=SelectQuery(
+                ["devices", "device-group", "post-rulebase", "security", "rules"]
+            ),
+            search=None,
         )
 
         j = InnerJoin(left, right, ["name"], ["destination"])

@@ -107,7 +107,9 @@ def convert_to_joins_or_statement(tokens):
         match_func = token_map.get(tokens[5])
         right_path = tokens[6]
 
-        return join_func(left_statement, right_statement, left_path, right_path, match_func)
+        return join_func(
+            left_statement, right_statement, left_path, right_path, match_func
+        )
 
 
 def convert_to_statement(tokens):
@@ -139,8 +141,6 @@ def pairwise(it):
 class StringParser:
     """StringParser
     Parses a given string as a panos-editor query by converting it into a series of predicates.
-
-
     """
 
     def parse(self, string: str):
@@ -178,7 +178,15 @@ class StringParser:
         statement = selector + expr
         statement.set_parse_action(convert_to_statement)
 
-        join_definition = "JOIN" + selector + ZeroOrMore(expr) + "ON" + relative_path + op + relative_path
+        join_definition = (
+            "JOIN"
+            + selector
+            + ZeroOrMore(expr)
+            + "ON"
+            + relative_path
+            + op
+            + relative_path
+        )
 
         complete_statement = statement + ZeroOrMore(join_definition)
         complete_statement.set_parse_action(convert_to_joins_or_statement)

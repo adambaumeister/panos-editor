@@ -36,9 +36,6 @@ def get_value_recursive(obj: PanosObject, path: list[str]):
             return get_value_recursive(child, next_path)
 
 
-
-
-
 class SimpleJoin:
     def __init__(
         self, left_path: list[str], right_path: list[str], join_func=ExactOrIn
@@ -117,20 +114,44 @@ class Or:
 
 
 class SelectQuery:
+    STATIC_DEVICE_GROUP_PATH = ["devices", "device-group"]
+    STATIC_TEMPLATE_PATH = ["devices", "template"]
+    STATIC_TEMPLATE_STACK_PATH = ["devices", "template-stack"]
+
     def __init__(self, path: list[str]):
         """
         A select query. Used to split PanosObjects into smaller collections.
 
+        Select queries support names directly in the selection path as a shortcut. For example, `["OUTBOUND", "address"]` in place
+        of `["device", "device-group:OUTBOUND", "address"],
+
         Examples:
+            Select all Addresses from Shared
+
             >>> q = SelectQuery(["shared", "address"])
+
+            Select all addresses from a named device-group - this also works for templates and template-stacks
+
+            >>> q = SelectQuery(["OUTBOUND", "address"])
         """
         self.path = path
 
     def __call__(self, collection: PanosObjectCollection):
-        result = PanosObjectCollection(
-            self.select_object_recurse(list(collection), self.path)
-        )
-        return result
+        result = self.select_object_recurse(list(collection), self.path)
+
+        # Try using the device-group in the path
+        if not result:
+            result = self.select_object_recurse(
+                list(collection), self.STATIC_DEVICE_GROUP_PATH + self.path
+            )
+
+        # Try using the template-stack in the path
+        if not result:
+            result = self.select_object_recurse(
+                list(collection), self.STATIC_TEMPLATE_STACK_PATH + self.path
+            )
+
+        return PanosObjectCollection(result)
 
     def select_object_recurse(self, objects: list[PanosObject], path: list[str]):
         result = []
@@ -145,8 +166,13 @@ class SelectQuery:
                     # Otherwise, just add this single object
                     result.append(object)
             elif entry_children:
-                # don't trim the path in this scenario
-                result += self.select_object_recurse(entry_children, path)
+                named_objects = {x.attrs.get("name"): x for x in entry_children}
+                if named_objects.get(path[0]):
+                    # If we match a named object from an <entry> element
+                    result += self.select_object_recurse(entry_children, path[1:])
+                else:
+                    # don't trim the path in this scenario
+                    result += self.select_object_recurse(entry_children, path)
             else:
                 child_objects = object.children.get(path[0])
                 if child_objects:
@@ -187,11 +213,7 @@ class SearchQuery:
 
 
 class Statement:
-    def __init__(
-        self,
-        select: SelectQuery,
-        search: Optional[Union[And, Or]] = None
-    ):
+    def __init__(self, select: SelectQuery, search: Optional[Union[And, Or]] = None):
         """
         A complete statement for quering PAN-OS Objects.
 
@@ -211,12 +233,12 @@ class Statement:
 
 class InnerJoin:
     def __init__(
-            self,
-            left_statement: Union[Self, Statement],
-            right_statement: Union[Self, Statement],
-            left_path: list[str],
-            right_path: list[str],
-            join_function: Callable = ExactOrIn
+        self,
+        left_statement: Union[Self, Statement],
+        right_statement: Union[Self, Statement],
+        left_path: list[str],
+        right_path: list[str],
+        join_function: Callable = ExactOrIn,
     ):
         self.left_statement = left_statement
         self.right_statement = right_statement
