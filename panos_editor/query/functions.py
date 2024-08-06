@@ -1,5 +1,6 @@
 from typing import Callable, Union, Optional, Self
 
+from panos_editor.inventory.file import FileLoader
 from panos_editor.query.query_functions import ExactOrIn
 from panos_editor.parser.xml import PanosObjectCollection, PanosObject
 
@@ -213,18 +214,23 @@ class SearchQuery:
 
 
 class Statement:
-    def __init__(self, select: SelectQuery, search: Optional[Union[And, Or]] = None):
+    def __init__(self, select: SelectQuery, search: Optional[Union[And, Or]] = None, loader: Optional[Union[FileLoader]] = None):
         """
-        A complete statement for quering PAN-OS Objects.
+        A complete statement for querying PAN-OS Objects.
 
         Arguments:
             select: The `SelectQuery` object for selecting the objects
-            *predicates: The list of Predicates like `And` to use for searching the selected objects
+            search: The top level predicate used in the search query
         """
+        self.loader = loader
         self.select = select
         self.search = search
 
-    def __call__(self, collection: PanosObjectCollection):
+    def __call__(self, collection: Optional[PanosObjectCollection] = None):
+        # If this statement defines a loader, use it instead of any passed collection
+        if self.loader:
+            collection = self.loader()
+
         selected = self.select(collection)
         if not self.search:
             return selected

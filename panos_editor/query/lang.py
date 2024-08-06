@@ -13,6 +13,8 @@ from pyparsing import (
     ZeroOrMore,
     ParseException,
 )
+
+from panos_editor.inventory.loader import get_inventory
 from panos_editor.query.functions import (
     SelectQuery,
     SearchQuery,
@@ -123,6 +125,11 @@ def convert_to_statement(tokens):
     return Statement(select=selector, search=predicates[0])
 
 
+def convert_to_loader(tokens):
+    inventory = get_inventory()
+    return inventory.get_by_id(tokens[0])
+
+
 def string_to_select(tokens):
     path = tokens[0]
     return SelectQuery(path.split("."))
@@ -164,6 +171,11 @@ class StringParser:
             >>> StringParser().parse("config.shared.address ip-netmask == 10.100.100.10 JOIN devices.device-group.post-rulebase.security.rules ON name == source")
 
         """
+        host_id = Regex(r"[a-zA-Z\.\-_0-9]+")
+        host_id_seperator = ":"
+        host_def = host_id + host_id_seperator
+        host_def.set_parse_action(convert_to_loader)
+
         selector = Regex(r"[a-zA-Z\.\-_0-9]+")
         selector.add_parse_action(string_to_select)
 
@@ -175,7 +187,7 @@ class StringParser:
         query = relative_path + op + value
         expr = infix_notation(query, [(one_of("AND OR"), 2, OpAssoc.RIGHT)])
 
-        statement = selector + expr
+        statement = ZeroOrMore(host_def) + selector + expr
         statement.set_parse_action(convert_to_statement)
 
         join_definition = (

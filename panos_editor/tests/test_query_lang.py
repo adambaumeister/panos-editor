@@ -1,5 +1,6 @@
 import pytest
 
+from panos_editor.inventory.errors import HostNotFound
 from panos_editor.parser.xml import PanosObjectCollection, PanosObject
 from panos_editor.tests.fixtures import dummy_xml, lab_xml
 
@@ -65,3 +66,19 @@ class TestStringParser:
             )
         except AssertionError:
             raise
+
+    @pytest.mark.parametrize(
+        "string, expected",
+        [
+            (
+                "dummy.xml:shared.address ip-netmask == 10.100.100.10",
+                "dummy.xml",
+            )
+        ],
+    )
+    def test_parse_with_file_loader(self, string, expected):
+        from panos_editor.query.lang import StringParser
+
+        sp = StringParser()
+        with pytest.raises(HostNotFound):
+            sp.parse(string)
