@@ -1,10 +1,12 @@
 import pathlib
 from lxml.etree import fromstring
+
+from panos_editor.inventory.base import Loader
 from panos_editor.inventory.errors import HostNotFound
 from panos_editor.parser.xml import PanosObjectCollection, PanosObject
 
 
-class FileLoader:
+class FileLoader(Loader):
     def __init__(self, file: pathlib.Path):
         """
         Basic File type Loader. Reads local configuration files and turns them into PanosObjectCollection() instances.

@@ -14,6 +14,7 @@ from pyparsing import (
     ParseException,
 )
 
+from panos_editor.inventory.base import Loader
 from panos_editor.inventory.loader import get_inventory
 from panos_editor.query.functions import (
     SelectQuery,
@@ -115,15 +116,28 @@ def convert_to_joins_or_statement(tokens):
 
 
 def convert_to_statement(tokens):
-    selector = tokens[0]
-    queries = tokens[1]
+    loader = None
+    for i, token in enumerate(tokens):
+        if Loader in token.get_types():
+            loader = token
+            tokens.pop(i)
+
+    if len(tokens) == 1:
+        selector = tokens[0]
+        return Statement(select=selector, loader=loader)
+    elif len(tokens) == 2:
+        selector = tokens[0]
+        queries = tokens[1]
+    else:
+        raise QuerySyntaxError("Bad query. Expecting <loader>:<selector> <query>.")
+
     predicates = []
     predicate_parsers = convert_to_predicates_recursive(queries)
     for pp in predicate_parsers:
         predicates.append(pp.convert_to_prdedicates())
 
-    return Statement(select=selector, search=predicates[0])
-
+    s = Statement(select=selector, search=predicates[0], loader=loader)
+    return s
 
 def convert_to_loader(tokens):
     inventory = get_inventory()
@@ -141,6 +155,7 @@ def pairwise(it):
         try:
             yield next(it), next(it)
         except StopIteration:
+
             # no more elements in the iterator
             return
 
@@ -187,7 +202,7 @@ class StringParser:
         query = relative_path + op + value
         expr = infix_notation(query, [(one_of("AND OR"), 2, OpAssoc.RIGHT)])
 
-        statement = ZeroOrMore(host_def) + selector + expr
+        statement = ZeroOrMore(host_def) + selector + ZeroOrMore(expr)
         statement.set_parse_action(convert_to_statement)
 
         join_definition = (

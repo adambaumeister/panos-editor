@@ -12,6 +12,8 @@ class TestStringParser:
         [
             # Normal
             ("shared.address ip-netmask == 10.100.100.10", ["testhost_10.100.100.10"]),
+            # No query spec
+            ("shared.address", ["testhost_10.100.100.10", "testhost_public_ip_DYNAMIC"]),
             (
                 "shared.address ip-netmask == 10.100.100.10 OR name == testhost_public_ip_DYNAMIC",
                 ["testhost_10.100.100.10", "testhost_public_ip_DYNAMIC"],

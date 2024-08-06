@@ -13,7 +13,6 @@ def get_value_recursive(obj: PanosObject, path: list[str]):
     Examples:
         >>> get(get_value_recursive(PanosObject(...), ["source"]))
     """
-
     # Handle the case where the search path doesn't include the final identifier
     member_value = obj.elements.get("member")
     if len(path) == 0 and member_value:
@@ -228,6 +227,7 @@ class Statement:
 
     def __call__(self, collection: Optional[PanosObjectCollection] = None):
         # If this statement defines a loader, use it instead of any passed collection
+        #print(self.loader, collection)
         if self.loader:
             collection = self.loader()
 

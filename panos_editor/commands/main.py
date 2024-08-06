@@ -3,10 +3,14 @@ import sys
 from typing import Annotated
 
 import typer
-import panos_editor.commands.show
+from rich.console import Console
+from rich.table import Table
 from loguru import logger
 
 from importlib.metadata import version, PackageNotFoundError
+
+from panos_editor.commands.utils import query_string_callback, list_string_callback
+from panos_editor.output.table import TableOutput
 
 HELP_STR = """:hammer: panos-editor is a multifunction CLI application and python package for interacting with PAN-OS configurations.
 
@@ -18,11 +22,27 @@ app = typer.Typer(
     rich_markup_mode="rich",
 )
 
-app.add_typer(
-    panos_editor.commands.show.app,
-    name="show",
-    rich_help_panel=":fire: Manipulating Configs",
+console = Console()
+
+@app.command(
+    rich_help_panel=":fire: Configuration Commands",
+    help="Displays items from PAN-OS Configurations"
 )
+def show(
+    query: Annotated[str, typer.Argument(help="Selection and Search query string.", callback=query_string_callback)],
+    fields: Annotated[str, typer.Option(help="Fields to display from within the search result.", callback=list_string_callback)] = "name",
+):
+    collection = query()
+    table = TableOutput(fields)
+
+    print_table = Table()
+    for x in fields:
+        print_table.add_column(x)
+
+    for row in table(collection):
+        print_table.add_row(*[str(x) for x in row])
+
+    console.print(print_table)
 
 
 @app.command(rich_help_panel="General", name="version")
@@ -47,7 +67,9 @@ class LogLevel(enum.Enum):
 
 @app.callback()
 def main(
-        log_level: Annotated[LogLevel, typer.Option(help="The log level for stdout logging.")] = LogLevel.WARNING.value
+    log_level: Annotated[
+        LogLevel, typer.Option(help="The log level for stdout logging.")
+    ] = LogLevel.WARNING.value
 ):
     logger.remove(0)
     logger.add(sys.stdout, level=log_level.value)
